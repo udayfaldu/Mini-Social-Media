@@ -15,10 +15,10 @@ import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { toggleSavedPost, selectIsPostSaved } from '../store/slices/savedPostsSlice';
 import { useAuth } from '../hooks/useAuth';
 import { useAuthor } from '../hooks/useAuthor';
-import { Spinner } from '../components/common/Spinner';
 import { CommentList } from '../components/comments/CommentList';
 import { ModalPortal } from '../components/common/ModalPortal';
 import { ReactionPicker } from '../components/posts/ReactionPicker';
+
 
 export function PostDetailPage() {
   const { id } = useParams();
@@ -160,11 +160,12 @@ export function PostDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-[40vh] flex items-center justify-center">
-        <Spinner size="md" label="Loading post..." />
+      <div className="min-h-[40vh] flex items-center justify-center text-xs text-gray-500">
+        Loading post...
       </div>
     );
   }
+
 
   if (error || !post) {
     return (

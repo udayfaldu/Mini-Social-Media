@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { MessageSquare, Send, LogIn } from 'lucide-react';
 import type { Comment } from '../../types';
 import { CommentItem } from './CommentItem';
-import { Spinner } from '../common/Spinner';
 import { EmptyState } from '../common/EmptyState';
 import { useAuth } from '../../hooks/useAuth';
 import { validateComment } from '../../utils/validators';
@@ -89,7 +88,8 @@ export function CommentList({
         </div>
       )}
 
-      {loading && <Spinner size="sm" label="Loading comments..." />}
+      {loading && <p className="text-xs text-gray-500 py-1">Loading comments...</p>}
+
 
       {error && (
         <p className="text-xs text-red-500 py-1">

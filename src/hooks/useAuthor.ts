@@ -43,9 +43,8 @@ export function useAuthor(userId: number) {
           setAuthorName(name);
         }
       })
-      .catch(() => {
-        // Keep fallback
-      });
+      .catch(() => {});
+
 
     return () => {
       isCancelled = true;

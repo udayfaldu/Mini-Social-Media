@@ -5,18 +5,13 @@ import type { Post, PostFilterState } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
 import { PostFilter } from '../components/posts/PostFilter';
 import { PostList } from '../components/posts/PostList';
-import { Pagination } from '../components/common/Pagination';
 import { ModalPortal } from '../components/common/ModalPortal';
-
-const PAGE_SIZE = 10;
 
 export function DashboardPage() {
   const [allFetchedPosts, setAllFetchedPosts] = useState<Post[]>([]);
-  const [page, setPage] = useState(1);
   const [tags, setTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
 
   const [filters, setFilters] = useState<PostFilterState>({
     searchQuery: '',
@@ -28,11 +23,6 @@ export function DashboardPage() {
 
   const [postToDelete, setPostToDelete] = useState<Post | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch, filters.selectedTags]);
 
   useEffect(() => {
     async function loadTags() {
@@ -114,12 +104,6 @@ export function DashboardPage() {
     return result;
   }, [allFetchedPosts, filters.selectedTags, filters.sortBy]);
 
-  const totalPostsCount = filteredAndSortedPosts.length;
-  const paginatedPosts = useMemo(() => {
-    const startIndex = (page - 1) * PAGE_SIZE;
-    return filteredAndSortedPosts.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [filteredAndSortedPosts, page]);
-
   const handleTagClick = (tag: string) => {
     setFilters((prev) => {
       const isSelected = prev.selectedTags.includes(tag);
@@ -161,7 +145,6 @@ export function DashboardPage() {
         </p>
       </div>
 
-
       <PostFilter
         filters={filters}
         onFilterChange={setFilters}
@@ -169,29 +152,16 @@ export function DashboardPage() {
       />
 
       <PostList
-        posts={paginatedPosts}
+        posts={filteredAndSortedPosts}
         loading={loading}
         error={error}
         onTagClick={handleTagClick}
         onDeleteClick={(post) => setPostToDelete(post)}
         onRetry={() => {
           setFilters({ searchQuery: '', selectedTags: [], sortBy: 'latest' });
-          setPage(1);
         }}
         showDeleteButton={true}
       />
-
-      {!loading && !error && totalPostsCount > PAGE_SIZE && (
-        <Pagination
-          currentPage={page}
-          totalItems={totalPostsCount}
-          pageSize={PAGE_SIZE}
-          onPageChange={(newPage) => {
-            setPage(newPage);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-        />
-      )}
 
       <ModalPortal
         isOpen={Boolean(postToDelete)}
@@ -210,3 +180,4 @@ export function DashboardPage() {
     </div>
   );
 }
+

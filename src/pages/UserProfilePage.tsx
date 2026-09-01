@@ -13,10 +13,10 @@ import { userService } from '../services/userService';
 import { postService } from '../services/postService';
 import type { User, Post } from '../types';
 import { Avatar } from '../components/common/Avatar';
-import { Spinner } from '../components/common/Spinner';
 import { PostCard } from '../components/posts/PostCard';
 import { EmptyState } from '../components/common/EmptyState';
 import { ModalPortal } from '../components/common/ModalPortal';
+
 
 export function UserProfilePage() {
   const { id } = useParams();
@@ -126,11 +126,12 @@ export function UserProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-[40vh] flex items-center justify-center">
-        <Spinner size="md" label="Loading profile..." />
+      <div className="min-h-[40vh] flex items-center justify-center text-xs text-gray-500">
+        Loading profile...
       </div>
     );
   }
+
 
   if (error || !user) {
     return (
@@ -227,7 +228,8 @@ export function UserProfilePage() {
           Posts by {user.firstName} ({userPosts.length})
         </h2>
 
-        {postsLoading && <Spinner size="sm" label="Loading posts..." />}
+        {postsLoading && <p className="text-xs text-gray-500 py-1">Loading posts...</p>}
+
 
         {postsError && (
           <div className="p-3 rounded-md bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300 text-xs">

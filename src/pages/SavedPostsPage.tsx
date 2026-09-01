@@ -6,34 +6,19 @@ import { clearAllSavedPosts, removeSavedPost, selectSavedPosts } from '../store/
 import { PostCard } from '../components/posts/PostCard';
 import { EmptyState } from '../components/common/EmptyState';
 import { ModalPortal } from '../components/common/ModalPortal';
-import { Pagination } from '../components/common/Pagination';
 import type { Post } from '../types';
-
-const PAGE_SIZE = 10;
 
 export function SavedPostsPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const savedPosts = useAppSelector(selectSavedPosts);
 
-
-  const [page, setPage] = useState(1);
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
   const [postToRemove, setPostToRemove] = useState<Post | null>(null);
-
-
-  const totalPages = Math.ceil(savedPosts.length / PAGE_SIZE);
-  const currentPage = Math.min(page, Math.max(1, totalPages));
-
-  const paginatedPosts = savedPosts.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
-  );
 
   const handleClearAll = () => {
     dispatch(clearAllSavedPosts());
     setIsClearModalOpen(false);
-    setPage(1);
   };
 
   const handleRemovePost = () => {
@@ -98,30 +83,16 @@ export function SavedPostsPage() {
           }
         />
       ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {paginatedPosts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                onDeleteClick={(p) => setPostToRemove(p)}
-                showDeleteButton={true}
-              />
-            ))}
-          </div>
-
-          {savedPosts.length > PAGE_SIZE && (
-            <Pagination
-              currentPage={currentPage}
-              totalItems={savedPosts.length}
-              pageSize={PAGE_SIZE}
-              onPageChange={(p) => {
-                setPage(p);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {savedPosts.map((post) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              onDeleteClick={(p) => setPostToRemove(p)}
+              showDeleteButton={true}
             />
-          )}
-        </>
+          ))}
+        </div>
       )}
 
       <ModalPortal
@@ -154,3 +125,4 @@ export function SavedPostsPage() {
     </div>
   );
 }
+

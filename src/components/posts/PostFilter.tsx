@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useState, type ChangeEvent } from 'react';
 import { Search, X, ChevronDown, Check, Tag } from 'lucide-react';
 import type { PostFilterState } from '../../types';
 
@@ -13,33 +13,7 @@ export function PostFilter({
   onFilterChange,
   availableTags,
 }: PostFilterProps) {
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false);
-
-  useEffect(() => {
-    if (searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, []);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsTagDropdownOpen(false);
-      }
-    }
-
-    if (isTagDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isTagDropdownOpen]);
 
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     onFilterChange({
@@ -87,9 +61,6 @@ export function PostFilter({
       selectedTags: [],
       sortBy: 'latest',
     });
-    if (searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
   };
 
   const hasActiveFilters = Boolean(
@@ -104,7 +75,6 @@ export function PostFilter({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
-            ref={searchInputRef}
             type="text"
             value={filters.searchQuery}
             onChange={handleSearchChange}
@@ -123,7 +93,7 @@ export function PostFilter({
           )}
         </div>
 
-        <div className="relative sm:w-48" ref={dropdownRef}>
+        <div className="relative sm:w-48">
           <button
             type="button"
             onClick={() => setIsTagDropdownOpen((prev) => !prev)}
@@ -142,41 +112,47 @@ export function PostFilter({
           </button>
 
           {isTagDropdownOpen && (
-            <div className="absolute left-0 sm:right-0 mt-1 w-56 max-h-60 overflow-y-auto bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800 py-1.5 z-50 text-xs">
-              <div className="flex items-center justify-between px-3 py-1 border-b border-gray-100 dark:border-gray-800 text-[11px] text-gray-500">
-                <span>Filter by tags</span>
-                {filters.selectedTags.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={handleClearTags}
-                    className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-
-              <div className="py-1">
-                {availableTags.map((tag) => {
-                  const isChecked = filters.selectedTags.includes(tag);
-                  return (
-                    <label
-                      key={tag}
-                      className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer text-gray-700 dark:text-gray-300 select-none transition"
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setIsTagDropdownOpen(false)}
+              />
+              <div className="absolute left-0 sm:right-0 mt-1 w-56 max-h-60 overflow-y-auto bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800 py-1.5 z-50 text-xs">
+                <div className="flex items-center justify-between px-3 py-1 border-b border-gray-100 dark:border-gray-800 text-[11px] text-gray-500">
+                  <span>Filter by tags</span>
+                  {filters.selectedTags.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleClearTags}
+                      className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
                     >
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={() => handleTagToggle(tag)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-0 w-3.5 h-3.5"
-                      />
-                      <span className="flex-1 truncate">#{tag}</span>
-                      {isChecked && <Check className="w-3 h-3 text-blue-600 dark:text-blue-400" />}
-                    </label>
-                  );
-                })}
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                <div className="py-1">
+                  {availableTags.map((tag) => {
+                    const isChecked = filters.selectedTags.includes(tag);
+                    return (
+                      <label
+                        key={tag}
+                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer text-gray-700 dark:text-gray-300 select-none transition"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleTagToggle(tag)}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-0 w-3.5 h-3.5"
+                        />
+                        <span className="flex-1 truncate">#{tag}</span>
+                        {isChecked && <Check className="w-3 h-3 text-blue-600 dark:text-blue-400" />}
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            </>
           )}
         </div>
 
@@ -237,3 +213,4 @@ export function PostFilter({
     </div>
   );
 }
+

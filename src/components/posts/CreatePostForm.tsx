@@ -28,29 +28,9 @@ export function CreatePostForm({
   const bodyValidation = validatePostBody(formData.body);
   const tagsValidation = validateTags(formData.tags);
 
-  const charCount = formData.body.length;
-  const charsRemaining = MAX_BODY_CHARS - charCount;
-  const isOverLimit = charsRemaining < 0;
-
-  const radius = 9;
-  const circumference = 2 * Math.PI * radius;
-  const progressRatio = Math.min(1, charCount / MAX_BODY_CHARS);
-  const strokeDashoffset = circumference - progressRatio * circumference;
-
-  let progressColor = 'stroke-blue-600 dark:stroke-blue-400';
-  let counterTextColor = 'text-gray-500';
-
-  if (isOverLimit) {
-    progressColor = 'stroke-red-600';
-    counterTextColor = 'text-red-600 font-bold';
-  } else if (charsRemaining <= 50) {
-    progressColor = 'stroke-amber-500';
-    counterTextColor = 'text-amber-500 font-semibold';
-  }
-
+  const isOverLimit = formData.body.length > MAX_BODY_CHARS;
   const isFormValid =
     titleValidation.isValid && bodyValidation.isValid && tagsValidation.isValid && !isOverLimit;
-
 
   const handleBlur = (field: string) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
@@ -103,7 +83,6 @@ export function CreatePostForm({
       onSubmit={handleSubmit}
       className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-5 space-y-4 shadow-sm"
     >
-
       <div>
         <label
           htmlFor="title"
@@ -139,34 +118,15 @@ export function CreatePostForm({
           >
             Content *
           </label>
-          <div className="flex items-center gap-2">
-            <span className={`text-[11px] ${counterTextColor}`}>
-              {charsRemaining <= 100 ? `${charsRemaining} left` : `${charCount}/${MAX_BODY_CHARS}`}
-            </span>
-            <div className="relative w-5 h-5 flex items-center justify-center">
-              <svg className="w-5 h-5 -rotate-90" viewBox="0 0 24 24">
-                <circle
-                  cx="12"
-                  cy="12"
-                  r={radius}
-                  className="stroke-gray-200 dark:stroke-gray-700"
-                  strokeWidth="2.5"
-                  fill="none"
-                />
-                <circle
-                  cx="12"
-                  cy="12"
-                  r={radius}
-                  className={`${progressColor} transition-all duration-150`}
-                  strokeWidth="2.5"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={strokeDashoffset}
-                  strokeLinecap="round"
-                  fill="none"
-                />
-              </svg>
-            </div>
-          </div>
+          <span
+            className={`text-xs ${
+              isOverLimit
+                ? 'text-red-500 font-semibold'
+                : 'text-gray-400'
+            }`}
+          >
+            {formData.body.length}/{MAX_BODY_CHARS}
+          </span>
         </div>
         <textarea
           id="body"
@@ -187,6 +147,7 @@ export function CreatePostForm({
           <p className="mt-1 text-xs text-red-500">{bodyValidation.error}</p>
         )}
       </div>
+
 
       <div>
         <label

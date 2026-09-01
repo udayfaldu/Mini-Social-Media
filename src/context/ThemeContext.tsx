@@ -33,7 +33,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     try {
       localStorage.setItem(THEME_KEY, theme);
     } catch {
-      // ignore
     }
   }, [theme]);
 
