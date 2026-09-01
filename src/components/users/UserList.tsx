@@ -1,8 +1,7 @@
 import type { User } from '../../types';
 import { UserCard } from './UserCard';
-import { Alert } from '../common/Alert';
 import { EmptyState } from '../common/EmptyState';
-import { Users as UsersIcon } from 'lucide-react';
+import { Users as UsersIcon, RefreshCw } from 'lucide-react';
 
 interface UserListProps {
   users: User[];
@@ -40,13 +39,22 @@ export function UserList({ users, loading, error, onRetry }: UserListProps) {
 
   if (error) {
     return (
-      <Alert
-        type="error"
-        title="Error"
-        message={error}
-      />
+      <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300 text-xs sm:text-sm">
+        <p className="font-semibold">{error}</p>
+        {onRetry && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-xs font-medium"
+          >
+            <RefreshCw className="w-3 h-3" />
+            Retry
+          </button>
+        )}
+      </div>
     );
   }
+
 
   if (users.length === 0) {
     return (

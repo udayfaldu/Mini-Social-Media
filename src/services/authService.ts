@@ -1,13 +1,14 @@
 import { apiRequest } from './api';
 import type { AuthUser, LoginCredentials, RegisterFormData } from '../types';
 
-const AUTH_STORAGE_KEY = 'miniconnect_auth_user';
-const TOKEN_STORAGE_KEY = 'miniconnect_auth_token';
-const REGISTERED_USERS_KEY = 'miniconnect_registered_users';
+const AUTH_KEY = 'user';
+const TOKEN_KEY = 'token';
+const USERS_KEY = 'users';
 
 interface RegisteredUserRecord extends AuthUser {
   password?: string;
 }
+
 
 export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthUser> {
@@ -36,8 +37,8 @@ export const authService = {
         token,
       };
 
-      localStorage.setItem(TOKEN_STORAGE_KEY, token);
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authUser));
+      localStorage.setItem(TOKEN_KEY, token);
+      localStorage.setItem(AUTH_KEY, JSON.stringify(authUser));
       return authUser;
     }
 
@@ -52,9 +53,9 @@ export const authService = {
       });
 
       if (response.token) {
-        localStorage.setItem(TOKEN_STORAGE_KEY, response.token);
+        localStorage.setItem(TOKEN_KEY, response.token);
       }
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(response));
+      localStorage.setItem(AUTH_KEY, JSON.stringify(response));
       return response;
     } catch {
       throw new Error('Invalid username or password.');
@@ -101,14 +102,14 @@ export const authService = {
       (u) => u.username.toLowerCase() !== data.username.toLowerCase()
     );
     filtered.push(userRecord);
-    localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(filtered));
+    localStorage.setItem(USERS_KEY, JSON.stringify(filtered));
 
     return userRecord;
   },
 
   getRegisteredUsers(): RegisteredUserRecord[] {
     try {
-      const stored = localStorage.getItem(REGISTERED_USERS_KEY);
+      const stored = localStorage.getItem(USERS_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -117,7 +118,7 @@ export const authService = {
 
   getStoredUser(): AuthUser | null {
     try {
-      const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+      const stored = localStorage.getItem(AUTH_KEY);
       if (!stored) return null;
       const parsed = JSON.parse(stored) as AuthUser;
       if (parsed && typeof parsed.id === 'number' && typeof parsed.username === 'string') {
@@ -130,11 +131,12 @@ export const authService = {
   },
 
   getStoredToken(): string | null {
-    return localStorage.getItem(TOKEN_STORAGE_KEY);
+    return localStorage.getItem(TOKEN_KEY);
   },
 
   logout(): void {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem(AUTH_KEY);
+    localStorage.removeItem(TOKEN_KEY);
   },
 };
+

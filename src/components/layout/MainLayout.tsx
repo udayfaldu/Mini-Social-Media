@@ -4,7 +4,8 @@ import { Navbar } from '../common/Navbar';
 import { Sidebar } from '../common/Sidebar';
 
 export function MainLayout() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
 
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);

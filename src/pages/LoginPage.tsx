@@ -1,8 +1,8 @@
 import { useState, type FormEvent, type ChangeEvent } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { LogIn, Lock, User, Eye, EyeOff, Check } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { useAuth } from '../hooks/useAuth';
-import { Alert } from '../components/common/Alert';
 import type { LoginCredentials } from '../types';
 import { validateUsername } from '../utils/validators';
 
@@ -25,12 +25,8 @@ export function LoginPage() {
     password: locationState?.registeredUsername ? '' : 'emilyspass',
   });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(
-    locationState?.successMessage || null
-  );
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const usernameValidation = validateUsername(credentials.username);
   const isPasswordValid = credentials.password.trim().length >= 6;
@@ -52,7 +48,6 @@ export function LoginPage() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setTouched({ username: true, password: true });
-    setError(null);
 
     if (!isFormValid || isLoading) {
       return;
@@ -61,21 +56,17 @@ export function LoginPage() {
     setIsLoading(true);
     try {
       await login(credentials);
+      toast.success('Logged in successfully!');
       navigate(fromPath, { replace: true });
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('Login failed. Please check your credentials.');
-      }
+      const msg = err instanceof Error ? err.message : 'Login failed. Please check your credentials.';
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
   };
 
   const fillDemoAccount = (username: string, pass: string) => {
-    setSuccessMessage(null);
-    setError(null);
     setCredentials({
       username,
       password: pass,
@@ -95,23 +86,8 @@ export function LoginPage() {
           </p>
         </div>
 
-        {successMessage && (
-          <Alert
-            type="success"
-            message={successMessage}
-            onClose={() => setSuccessMessage(null)}
-          />
-        )}
-
-        {error && (
-          <Alert
-            type="error"
-            message={error}
-            onClose={() => setError(null)}
-          />
-        )}
-
         <div className="p-2.5 rounded-md bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 text-xs">
+
           <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
             Demo Accounts:
           </p>
@@ -122,13 +98,6 @@ export function LoginPage() {
               className="px-2 py-1 rounded bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 border border-gray-200 dark:border-gray-600 text-[11px] font-medium hover:bg-gray-50"
             >
               emilys / emilyspass
-            </button>
-            <button
-              type="button"
-              onClick={() => fillDemoAccount('michaelw', 'michaelwpass')}
-              className="px-2 py-1 rounded bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 border border-gray-200 dark:border-gray-600 text-[11px] font-medium hover:bg-gray-50"
-            >
-              michaelw / michaelwpass
             </button>
           </div>
         </div>

@@ -10,8 +10,9 @@ interface CommentItemProps {
 export function CommentItem({ comment }: CommentItemProps) {
   const { isAuthenticated } = useAuth();
   const initialLikes = comment.likes ?? 0;
-  const [likes, setLikes] = useState<number>(initialLikes);
-  const [isLiked, setIsLiked] = useState<boolean>(false);
+  const [likes, setLikes] = useState(initialLikes);
+  const [isLiked, setIsLiked] = useState(false);
+
 
   const handleLike = () => {
     if (!isAuthenticated) return;

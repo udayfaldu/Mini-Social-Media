@@ -8,7 +8,7 @@ export function useAuthor(userId: number) {
   const { user: currentUser } = useAuth();
   const isOwnPost = Boolean(currentUser && currentUser.id === userId);
 
-  const [authorName, setAuthorName] = useState<string>(() => {
+  const [authorName, setAuthorName] = useState(() => {
     if (isOwnPost && currentUser) {
       return `${currentUser.firstName} ${currentUser.lastName}`;
     }
@@ -17,6 +17,7 @@ export function useAuthor(userId: number) {
     }
     return `User #${userId}`;
   });
+
 
   useEffect(() => {
     if (isOwnPost && currentUser) {

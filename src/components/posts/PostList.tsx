@@ -1,6 +1,5 @@
 import type { Post } from '../../types';
 import { PostCard } from './PostCard';
-import { Alert } from '../common/Alert';
 import { EmptyState } from '../common/EmptyState';
 import { FileQuestion, RefreshCw } from 'lucide-react';
 
@@ -46,22 +45,22 @@ export function PostList({
 
   if (error) {
     return (
-      <div className="my-4">
-        <Alert type="error" title="Error" message={error}>
-          {onRetry && (
-            <button
-              type="button"
-              onClick={onRetry}
-              className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-xs font-medium"
-            >
-              <RefreshCw className="w-3 h-3" />
-              Retry
-            </button>
-          )}
-        </Alert>
+      <div className="my-4 p-4 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300 text-xs sm:text-sm">
+        <p className="font-semibold">{error}</p>
+        {onRetry && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-xs font-medium"
+          >
+            <RefreshCw className="w-3 h-3" />
+            Retry
+          </button>
+        )}
       </div>
     );
   }
+
 
   if (posts.length === 0) {
     return (

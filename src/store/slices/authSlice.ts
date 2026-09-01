@@ -36,7 +36,7 @@ const getInitialAuthState = (): AuthSliceState => {
   };
 };
 
-export const loginThunk = createAsyncThunk<
+export const loginUser = createAsyncThunk<
   AuthUser,
   LoginCredentials,
   { rejectValue: string }
@@ -49,7 +49,7 @@ export const loginThunk = createAsyncThunk<
   }
 });
 
-export const registerThunk = createAsyncThunk<
+export const registerUser = createAsyncThunk<
   AuthUser,
   RegisterFormData,
   { rejectValue: string }
@@ -71,7 +71,7 @@ export const authSlice = createSlice({
       action: PayloadAction<{ user: AuthUser; token?: string }>
     ) => {
       state.user = action.payload.user;
-      state.token = action.payload.token || action.payload.user.token || 'session-token';
+      state.token = action.payload.token || action.payload.user.token || 'demo-token';
       state.isAuthenticated = true;
       state.error = null;
     },
@@ -80,65 +80,45 @@ export const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
-      state.error = null;
       state.isLoading = false;
+      state.error = null;
     },
     clearAuthError: (state) => {
       state.error = null;
     },
-    checkStoredAuth: (state) => {
-      try {
-        const storedUser = authService.getStoredUser();
-        const storedToken = authService.getStoredToken();
-        if (storedUser && storedToken) {
-          state.user = storedUser;
-          state.token = storedToken;
-          state.isAuthenticated = true;
-        } else {
-          state.user = null;
-          state.token = null;
-          state.isAuthenticated = false;
-        }
-      } catch {
-        state.user = null;
-        state.token = null;
-        state.isAuthenticated = false;
-      }
-    },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(loginThunk.pending, (state) => {
+      .addCase(loginUser.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(loginThunk.fulfilled, (state, action: PayloadAction<AuthUser>) => {
+      .addCase(loginUser.fulfilled, (state, action: PayloadAction<AuthUser>) => {
         state.isLoading = false;
         state.user = action.payload;
-        state.token = action.payload.token || 'session-token';
+        state.token = action.payload.token || 'demo-token';
         state.isAuthenticated = true;
         state.error = null;
       })
-      .addCase(loginThunk.rejected, (state, action) => {
+      .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload || 'Login failed';
       })
-      .addCase(registerThunk.pending, (state) => {
+      .addCase(registerUser.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(registerThunk.fulfilled, (state) => {
+      .addCase(registerUser.fulfilled, (state) => {
         state.isLoading = false;
         state.error = null;
       })
-      .addCase(registerThunk.rejected, (state, action) => {
+      .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload || 'Registration failed';
       });
   },
 });
 
-export const { setCredentials, logoutUser, clearAuthError, checkStoredAuth } =
-  authSlice.actions;
-
+export const { setCredentials, logoutUser, clearAuthError } = authSlice.actions;
 export default authSlice.reducer;
+

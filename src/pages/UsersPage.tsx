@@ -7,9 +7,10 @@ import { UserList } from '../components/users/UserList';
 
 export function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
 
   const debouncedSearch = useDebounce(searchQuery, 400);
 

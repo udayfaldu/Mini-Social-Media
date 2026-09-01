@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { Bookmark, MessageSquare, Trash2 } from 'lucide-react';
 import type { Post } from '../../types';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { toggleSavedPost } from '../../store/slices/savedPostsSlice';
+
+import { toggleSavedPost, selectIsPostSaved } from '../../store/slices/savedPostsSlice';
 import { useAuthor } from '../../hooks/useAuthor';
 import { useAuth } from '../../hooks/useAuth';
 import { ReactionPicker } from './ReactionPicker';
@@ -23,9 +24,8 @@ export function PostCard({
 }: PostCardProps) {
   const { isAuthenticated } = useAuth();
   const dispatch = useAppDispatch();
-  const isSaved = useAppSelector((state) =>
-    state.savedPosts.savedPosts.some((p) => p.id === post.id)
-  );
+  const isSaved = useAppSelector(selectIsPostSaved(post.id));
+
 
   const { authorName, isOwnPost } = useAuthor(post.userId);
 

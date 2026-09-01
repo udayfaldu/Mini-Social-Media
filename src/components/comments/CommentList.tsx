@@ -22,8 +22,9 @@ export function CommentList({
   onAddComment,
 }: CommentListProps) {
   const { isAuthenticated } = useAuth();
-  const [commentText, setCommentText] = useState<string>('');
-  const [touched, setTouched] = useState<boolean>(false);
+  const [commentText, setCommentText] = useState('');
+  const [touched, setTouched] = useState(false);
+
 
   const commentValidation = validateComment(commentText);
 

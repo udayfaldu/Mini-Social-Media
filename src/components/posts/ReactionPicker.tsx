@@ -1,21 +1,6 @@
-import { useState, useRef, useEffect, type MouseEvent } from 'react';
+import { useState } from 'react';
 import { Heart } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-
-export type ReactionType = 'like' | 'insight' | 'rocket' | 'funny';
-
-interface ReactionConfig {
-  id: ReactionType;
-  emoji: string;
-  label: string;
-}
-
-export const AVAILABLE_REACTIONS: ReactionConfig[] = [
-  { id: 'like', emoji: '❤️', label: 'Love' },
-  { id: 'insight', emoji: '💡', label: 'Insight' },
-  { id: 'rocket', emoji: '🚀', label: 'Inspiring' },
-  { id: 'funny', emoji: '😂', label: 'Funny' },
-];
 
 interface ReactionPickerProps {
   initialCount: number;
@@ -29,152 +14,76 @@ export function ReactionPicker({
   size = 'sm',
 }: ReactionPickerProps) {
   const { isAuthenticated } = useAuth();
-  const storageKey = `miniconnect_reaction_post_${postId}`;
+  const storageKey = `miniconnect_liked_post_${postId}`;
 
-  const [activeReaction, setActiveReaction] = useState<ReactionType | null>(() => {
+  const [isLiked, setIsLiked] = useState(() => {
     try {
-      const stored = localStorage.getItem(storageKey);
-      return (stored as ReactionType) || null;
+      return localStorage.getItem(storageKey) === 'true';
     } catch {
-      return null;
+      return false;
     }
   });
 
-  const [count, setCount] = useState<number>(() => {
-    const isUserReacted = Boolean(localStorage.getItem(storageKey));
-    return isUserReacted ? initialCount + 1 : initialCount;
+  const [count, setCount] = useState(() => {
+    try {
+      return localStorage.getItem(storageKey) === 'true' ? initialCount + 1 : initialCount;
+    } catch {
+      return initialCount;
+    }
   });
 
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (closeTimeoutRef.current) {
-        clearTimeout(closeTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    function handleClickOutside(e: globalThis.MouseEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    }
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
-
-  const handleMouseEnter = () => {
-    if (!isAuthenticated) return;
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
-    }
-    setIsOpen(true);
-  };
-
-  const handleMouseLeave = () => {
-    if (!isAuthenticated) return;
-    closeTimeoutRef.current = setTimeout(() => {
-      setIsOpen(false);
-    }, 300);
-  };
-
-  const handleSelectReaction = (reaction: ReactionType, e: MouseEvent) => {
+  const handleToggleLike = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
     if (!isAuthenticated) return;
 
-    if (activeReaction === reaction) {
-      setActiveReaction(null);
+    if (isLiked) {
+      setIsLiked(false);
       setCount((prev) => Math.max(0, prev - 1));
       localStorage.removeItem(storageKey);
     } else {
-      if (!activeReaction) {
-        setCount((prev) => prev + 1);
-      }
-      setActiveReaction(reaction);
-      localStorage.setItem(storageKey, reaction);
+      setIsLiked(true);
+      setCount((prev) => prev + 1);
+      localStorage.setItem(storageKey, 'true');
     }
-    setIsOpen(false);
   };
 
-  const handleButtonClick = (e: MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (!isAuthenticated) return;
-    setIsOpen((prev) => !prev);
-  };
-
-  const currentEmoji = AVAILABLE_REACTIONS.find((r) => r.id === activeReaction)?.emoji;
+  const iconClass = size === 'md' ? 'w-4 h-4' : 'w-3.5 h-3.5';
 
   if (!isAuthenticated) {
     return (
       <div
-        className="flex items-center gap-1.5 px-2 py-0.5 text-gray-400 select-none cursor-not-allowed text-xs"
-        title="Sign in to react"
+        className={`flex items-center gap-1.5 px-2 py-1 text-gray-400 select-none cursor-not-allowed ${
+          size === 'md' ? 'text-sm' : 'text-xs'
+        }`}
+        title="Sign in to like"
       >
-        <Heart className={size === 'md' ? 'w-4 h-4' : 'w-3.5 h-3.5'} />
+        <Heart className={iconClass} />
         <span>{count}</span>
       </div>
     );
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="relative inline-flex items-center"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+    <button
+      type="button"
+      onClick={handleToggleLike}
+      title={isLiked ? 'Unlike' : 'Like'}
+      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-colors select-none ${
+        isLiked
+          ? 'text-red-600 dark:text-red-400 font-semibold bg-red-50 dark:bg-red-950/40'
+          : 'text-gray-600 dark:text-gray-400 hover:text-red-600 hover:bg-gray-100 dark:hover:bg-gray-800'
+      } ${size === 'md' ? 'text-sm' : 'text-xs'}`}
     >
-      {isOpen && (
-        <div className="absolute bottom-full left-0 pb-2 z-40">
-          <div className="flex items-center gap-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl rounded-full px-2.5 py-1.5 animate-in fade-in zoom-in-95 duration-100">
-            {AVAILABLE_REACTIONS.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={(e) => handleSelectReaction(item.id, e)}
-                className={`p-1 hover:scale-130 transition-transform rounded-full text-base flex items-center justify-center ${
-                  activeReaction === item.id ? 'bg-blue-100 dark:bg-blue-900/60 ring-2 ring-blue-500' : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-                title={item.label}
-              >
-                <span>{item.emoji}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <button
-        type="button"
-        onClick={handleButtonClick}
-        className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition select-none ${
-          activeReaction
-            ? 'text-red-600 dark:text-red-400 font-semibold bg-red-50 dark:bg-red-950/40'
-            : 'text-gray-600 dark:text-gray-400 hover:text-red-600 hover:bg-gray-100 dark:hover:bg-gray-800'
-        } ${size === 'md' ? 'text-sm' : 'text-xs'}`}
-      >
-        {currentEmoji ? (
-          <span className="text-sm">{currentEmoji}</span>
-        ) : (
-          <Heart className={`${size === 'md' ? 'w-4 h-4' : 'w-3.5 h-3.5'} transition`} />
-        )}
-        <span>{count}</span>
-      </button>
-    </div>
+      <Heart
+        className={`${iconClass} transition-transform ${
+          isLiked ? 'fill-red-500 text-red-500 scale-110' : ''
+        }`}
+      />
+      <span>{count}</span>
+    </button>
   );
 }
+
+

@@ -35,7 +35,6 @@ export async function apiRequest<T>(
           errorMessage = errorData.message;
         }
       } catch {
-        // ignore non-json response
       }
       throw new ApiError(errorMessage, response.status);
     }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { toast } from 'react-toastify';
 import { postService } from '../services/postService';
 import type { Post, PostFilterState } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
@@ -6,17 +7,16 @@ import { PostFilter } from '../components/posts/PostFilter';
 import { PostList } from '../components/posts/PostList';
 import { Pagination } from '../components/common/Pagination';
 import { ModalPortal } from '../components/common/ModalPortal';
-import { Alert } from '../components/common/Alert';
 
 const PAGE_SIZE = 10;
 
 export function DashboardPage() {
   const [allFetchedPosts, setAllFetchedPosts] = useState<Post[]>([]);
-  const [page, setPage] = useState<number>(1);
+  const [page, setPage] = useState(1);
   const [tags, setTags] = useState<string[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'info'; text: string } | null>(null);
+
 
   const [filters, setFilters] = useState<PostFilterState>({
     searchQuery: '',
@@ -27,7 +27,8 @@ export function DashboardPage() {
   const debouncedSearch = useDebounce(filters.searchQuery, 400);
 
   const [postToDelete, setPostToDelete] = useState<Post | null>(null);
-  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
 
   useEffect(() => {
     setPage(1);
@@ -138,17 +139,11 @@ export function DashboardPage() {
     try {
       await postService.deletePost(postToDelete.id);
       setAllFetchedPosts((prev) => prev.filter((p) => p.id !== postToDelete.id));
-      setFeedbackMessage({
-        type: 'success',
-        text: `Post "${postToDelete.title}" was deleted.`,
-      });
+      toast.success(`Post "${postToDelete.title}" was deleted.`);
       setPostToDelete(null);
     } catch {
       setAllFetchedPosts((prev) => prev.filter((p) => p.id !== postToDelete.id));
-      setFeedbackMessage({
-        type: 'info',
-        text: `Post "${postToDelete.title}" was removed.`,
-      });
+      toast.info(`Post "${postToDelete.title}" was removed.`);
       setPostToDelete(null);
     } finally {
       setIsDeleting(false);
@@ -166,13 +161,6 @@ export function DashboardPage() {
         </p>
       </div>
 
-      {feedbackMessage && (
-        <Alert
-          type={feedbackMessage.type}
-          message={feedbackMessage.text}
-          onClose={() => setFeedbackMessage(null)}
-        />
-      )}
 
       <PostFilter
         filters={filters}

@@ -7,41 +7,38 @@ import {
   Trash2,
   User as UserIcon,
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { postService } from '../services/postService';
 import { commentService } from '../services/commentService';
 import type { Post, Comment } from '../types';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { toggleSavedPost } from '../store/slices/savedPostsSlice';
+import { toggleSavedPost, selectIsPostSaved } from '../store/slices/savedPostsSlice';
 import { useAuth } from '../hooks/useAuth';
 import { useAuthor } from '../hooks/useAuthor';
 import { Spinner } from '../components/common/Spinner';
-import { Alert } from '../components/common/Alert';
 import { CommentList } from '../components/comments/CommentList';
 import { ModalPortal } from '../components/common/ModalPortal';
 import { ReactionPicker } from '../components/posts/ReactionPicker';
 
 export function PostDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { isAuthenticated } = useAuth();
 
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [commentsLoading, setCommentsLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
+  const [commentsLoading, setCommentsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [commentsError, setCommentsError] = useState<string | null>(null);
 
-  const [copied, setCopied] = useState<boolean>(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
-  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { authorName, isOwnPost } = useAuthor(post?.userId || 0);
 
-  const isSaved = useAppSelector((state) =>
-    post ? state.savedPosts.savedPosts.some((p) => p.id === post.id) : false
-  );
+  const isSaved = useAppSelector(selectIsPostSaved(post?.id ?? -1));
 
   useEffect(() => {
     const postId = Number(id);
@@ -51,61 +48,82 @@ export function PostDetailPage() {
       return;
     }
 
+    let isCancelled = false;
+
     async function loadPostData() {
       setLoading(true);
       setError(null);
       try {
         const fetchedPost = await postService.getPostById(postId);
-        setPost(fetchedPost);
+        if (!isCancelled) {
+          setPost(fetchedPost);
+        }
       } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError('Failed to fetch post details.');
+        if (!isCancelled) {
+          if (err instanceof Error) {
+            setError(err.message);
+          } else {
+            setError('Failed to fetch post.');
+          }
         }
       } finally {
-        setLoading(false);
+        if (!isCancelled) {
+          setLoading(false);
+        }
       }
     }
 
     void loadPostData();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [id]);
 
   useEffect(() => {
     const postId = Number(id);
     if (isNaN(postId)) return;
 
+    let isCancelled = false;
+
     async function loadComments() {
       setCommentsLoading(true);
       setCommentsError(null);
       try {
         const response = await commentService.getCommentsByPostId(postId);
-        setComments(response.comments);
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setCommentsError(err.message);
-        } else {
-          setCommentsError('Failed to load comments.');
+        if (!isCancelled) {
+          setComments(response.comments);
+        }
+      } catch {
+        if (!isCancelled) {
+          setComments([]);
         }
       } finally {
-        setCommentsLoading(false);
+        if (!isCancelled) {
+          setCommentsLoading(false);
+        }
       }
     }
 
+
     void loadComments();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [id]);
 
   const handleSaveToggle = () => {
     if (post) {
       dispatch(toggleSavedPost(post));
+      toast.info(isSaved ? 'Post removed from bookmarks' : 'Post bookmarked');
     }
   };
 
   const handleShare = async () => {
     if (navigator.clipboard) {
       await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      toast.success('Link copied to clipboard!');
     }
   };
 
@@ -114,8 +132,10 @@ export function PostDetailPage() {
     setIsDeleting(true);
     try {
       await postService.deletePost(post.id);
+      toast.success('Post deleted successfully');
       navigate('/', { replace: true });
     } catch {
+      toast.info('Post removed');
       navigate('/', { replace: true });
     } finally {
       setIsDeleting(false);
@@ -135,6 +155,7 @@ export function PostDetailPage() {
       },
     };
     setComments((prev) => [newComment, ...prev]);
+    toast.success('Comment added!');
   };
 
   if (loading) {
@@ -156,7 +177,9 @@ export function PostDetailPage() {
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back</span>
         </button>
-        <Alert type="error" title="Error" message={error || 'Could not load post.'} />
+        <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300 text-sm">
+          {error || 'Could not load post.'}
+        </div>
       </div>
     );
   }
@@ -254,8 +277,9 @@ export function PostDetailPage() {
             className="flex items-center gap-1 hover:text-gray-800 dark:hover:text-gray-200"
           >
             <Share2 className="w-3.5 h-3.5" />
-            <span>{copied ? 'Copied' : 'Share'}</span>
+            <span>Share</span>
           </button>
+
         </div>
       </article>
 

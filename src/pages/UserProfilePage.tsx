@@ -8,32 +8,30 @@ import {
   MapPin,
   Calendar,
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { userService } from '../services/userService';
 import { postService } from '../services/postService';
-import { useAuth } from '../hooks/useAuth';
 import type { User, Post } from '../types';
 import { Avatar } from '../components/common/Avatar';
 import { Spinner } from '../components/common/Spinner';
-import { Alert } from '../components/common/Alert';
 import { PostCard } from '../components/posts/PostCard';
 import { EmptyState } from '../components/common/EmptyState';
 import { ModalPortal } from '../components/common/ModalPortal';
 
 export function UserProfilePage() {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
   const navigate = useNavigate();
-  const { user: currentUser } = useAuth();
+
 
   const [user, setUser] = useState<User | null>(null);
   const [userPosts, setUserPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [postsLoading, setPostsLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
+  const [postsLoading, setPostsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [postsError, setPostsError] = useState<string | null>(null);
-  const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'info'; text: string } | null>(null);
 
   const [postToDelete, setPostToDelete] = useState<Post | null>(null);
-  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const userId = Number(id);
@@ -43,57 +41,65 @@ export function UserProfilePage() {
       return;
     }
 
+    let isCancelled = false;
+
     async function loadUserData() {
       setLoading(true);
       setError(null);
       try {
-        const fetchedUser = await userService.getUserById(userId);
-        setUser(fetchedUser);
+        const userData = await userService.getUserById(userId);
+        if (!isCancelled) {
+          setUser(userData);
+        }
       } catch (err: unknown) {
-        if (currentUser && currentUser.id === userId) {
-          setUser({
-            id: currentUser.id,
-            firstName: currentUser.firstName,
-            lastName: currentUser.lastName,
-            username: currentUser.username,
-            email: currentUser.email,
-            gender: currentUser.gender,
-            image: currentUser.image || `https://dummyjson.com/icon/${currentUser.username}/128`,
-            age: 24,
-            phone: '+1 (555) 234-5678',
-            role: 'Member',
-          });
-        } else if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError('Failed to fetch user profile.');
+        if (!isCancelled) {
+          if (err instanceof Error) {
+            setError(err.message);
+          } else {
+            setError('Failed to fetch user.');
+          }
         }
       } finally {
-        setLoading(false);
+        if (!isCancelled) {
+          setLoading(false);
+        }
       }
     }
 
     void loadUserData();
-  }, [id, currentUser]);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [id]);
 
   useEffect(() => {
     const userId = Number(id);
     if (isNaN(userId)) return;
 
+    let isCancelled = false;
+
     async function loadUserPosts() {
       setPostsLoading(true);
       setPostsError(null);
       try {
-        const response = await userService.getUserPosts(userId);
-        setUserPosts(response.posts);
+        const postsData = await postService.getPosts(100, 0);
+        if (!isCancelled) {
+          const userSpecificPosts = postsData.posts.filter((p) => p.userId === userId);
+          setUserPosts(userSpecificPosts);
+        }
       } catch (err: unknown) {
-        if (err instanceof Error) {
-          setPostsError(err.message);
-        } else {
-          setPostsError('Failed to load user posts.');
+        if (!isCancelled) {
+          if (err instanceof Error) {
+            setPostsError(err.message);
+          } else {
+            setPostsError('Failed to fetch user posts.');
+          }
         }
       } finally {
-        setPostsLoading(false);
+        if (!isCancelled) {
+          setPostsLoading(false);
+        }
       }
     }
 
@@ -107,17 +113,11 @@ export function UserProfilePage() {
     try {
       await postService.deletePost(postToDelete.id);
       setUserPosts((prev) => prev.filter((p) => p.id !== postToDelete.id));
-      setFeedbackMessage({
-        type: 'success',
-        text: `Post "${postToDelete.title}" was deleted.`,
-      });
+      toast.success(`Post "${postToDelete.title}" was deleted.`);
       setPostToDelete(null);
     } catch {
       setUserPosts((prev) => prev.filter((p) => p.id !== postToDelete.id));
-      setFeedbackMessage({
-        type: 'info',
-        text: `Post "${postToDelete.title}" was removed.`,
-      });
+      toast.info(`Post "${postToDelete.title}" was removed.`);
       setPostToDelete(null);
     } finally {
       setIsDeleting(false);
@@ -143,7 +143,9 @@ export function UserProfilePage() {
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back</span>
         </button>
-        <Alert type="error" title="Error" message={error || 'User not found.'} />
+        <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300 text-sm">
+          {error || 'User not found.'}
+        </div>
       </div>
     );
   }
@@ -158,14 +160,6 @@ export function UserProfilePage() {
         <ArrowLeft className="w-3.5 h-3.5" />
         <span>Back</span>
       </button>
-
-      {feedbackMessage && (
-        <Alert
-          type={feedbackMessage.type}
-          message={feedbackMessage.text}
-          onClose={() => setFeedbackMessage(null)}
-        />
-      )}
 
       <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-5 space-y-4">
         <div className="flex items-center gap-4">
@@ -236,8 +230,11 @@ export function UserProfilePage() {
         {postsLoading && <Spinner size="sm" label="Loading posts..." />}
 
         {postsError && (
-          <Alert type="error" title="Error" message={postsError} />
+          <div className="p-3 rounded-md bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300 text-xs">
+            {postsError}
+          </div>
         )}
+
 
         {!postsLoading && !postsError && userPosts.length === 0 && (
           <EmptyState

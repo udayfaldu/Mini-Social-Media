@@ -3,7 +3,7 @@ import type { ThemeContextType, ThemeMode } from '../types';
 
 export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-const THEME_STORAGE_KEY = 'miniconnect_theme';
+const THEME_KEY = 'theme';
 
 interface ThemeProviderProps {
   children: ReactNode;
@@ -12,7 +12,7 @@ interface ThemeProviderProps {
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<ThemeMode>(() => {
     try {
-      const stored = localStorage.getItem(THEME_STORAGE_KEY);
+      const stored = localStorage.getItem(THEME_KEY);
       if (stored === 'light' || stored === 'dark') {
         return stored;
       }
@@ -31,11 +31,12 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     }
 
     try {
-      localStorage.setItem(THEME_STORAGE_KEY, theme);
+      localStorage.setItem(THEME_KEY, theme);
     } catch {
       // ignore
     }
   }, [theme]);
+
 
   const toggleTheme = () => {
     setThemeState((prev) => (prev === 'dark' ? 'light' : 'dark'));

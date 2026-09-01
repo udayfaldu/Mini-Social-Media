@@ -15,7 +15,7 @@ export function PostFilter({
 }: PostFilterProps) {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [isTagDropdownOpen, setIsTagDropdownOpen] = useState<boolean>(false);
+  const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false);
 
   useEffect(() => {
     if (searchInputRef.current) {

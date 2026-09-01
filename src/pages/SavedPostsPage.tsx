@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Bookmark, Trash2, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { clearAllSavedPosts, removeSavedPost } from '../store/slices/savedPostsSlice';
+import { clearAllSavedPosts, removeSavedPost, selectSavedPosts } from '../store/slices/savedPostsSlice';
 import { PostCard } from '../components/posts/PostCard';
 import { EmptyState } from '../components/common/EmptyState';
 import { ModalPortal } from '../components/common/ModalPortal';
@@ -14,11 +14,13 @@ const PAGE_SIZE = 10;
 export function SavedPostsPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const savedPosts = useAppSelector((state) => state.savedPosts.savedPosts);
+  const savedPosts = useAppSelector(selectSavedPosts);
 
-  const [page, setPage] = useState<number>(1);
-  const [isClearModalOpen, setIsClearModalOpen] = useState<boolean>(false);
+
+  const [page, setPage] = useState(1);
+  const [isClearModalOpen, setIsClearModalOpen] = useState(false);
   const [postToRemove, setPostToRemove] = useState<Post | null>(null);
+
 
   const totalPages = Math.ceil(savedPosts.length / PAGE_SIZE);
   const currentPage = Math.min(page, Math.max(1, totalPages));

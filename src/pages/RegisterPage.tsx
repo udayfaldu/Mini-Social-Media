@@ -1,8 +1,8 @@
 import { useState, type FormEvent, type ChangeEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserPlus, Check, X, Eye, EyeOff } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { useAuth } from '../hooks/useAuth';
-import { Alert } from '../components/common/Alert';
 import type { RegisterFormData } from '../types';
 import {
   validateName,
@@ -26,10 +26,9 @@ export function RegisterPage() {
   });
 
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const firstNameValidation = validateName(formData.firstName, 'First Name');
   const lastNameValidation = validateName(formData.lastName, 'Last Name');
@@ -73,23 +72,22 @@ export function RegisterPage() {
     });
 
     if (!isFormValid || isLoading) return;
-    setError(null);
 
     setIsLoading(true);
     try {
       await register(formData);
+      toast.success(`Account created for @${formData.username}! Please sign in.`);
       navigate('/login', {
         replace: true,
         state: {
           registeredUsername: formData.username,
-          successMessage: `Account created for @${formData.username}! Please sign in.`,
         },
       });
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message);
+        toast.error(err.message);
       } else {
-        setError('Sign up failed. Please try again.');
+        toast.error('Sign up failed. Please try again.');
       }
     } finally {
       setIsLoading(false);
@@ -107,14 +105,6 @@ export function RegisterPage() {
             Join the MiniConnect community
           </p>
         </div>
-
-        {error && (
-          <Alert
-            type="error"
-            message={error}
-            onClose={() => setError(null)}
-          />
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-3.5">
           <div className="grid grid-cols-2 gap-2.5">

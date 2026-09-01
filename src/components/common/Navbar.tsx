@@ -13,7 +13,7 @@ interface NavbarProps {
 export function Navbar({ onToggleSidebar, isSidebarOpen }: NavbarProps) {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
-  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleLogout = () => {
     logout();

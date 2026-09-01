@@ -1,6 +1,6 @@
 import { useState, type FormEvent, type ChangeEvent } from 'react';
+import { toast } from 'react-toastify';
 import type { CreatePostFormData, CreatePostInput } from '../../types';
-import { Alert } from '../common/Alert';
 import { validatePostTitle, validatePostBody, validateTags } from '../../utils/validators';
 
 interface CreatePostFormProps {
@@ -23,14 +23,10 @@ export function CreatePostForm({
   });
 
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [serverError, setServerError] = useState<string | null>(null);
 
   const titleValidation = validatePostTitle(formData.title);
   const bodyValidation = validatePostBody(formData.body);
   const tagsValidation = validateTags(formData.tags);
-
-  const isFormValid =
-    titleValidation.isValid && bodyValidation.isValid && tagsValidation.isValid;
 
   const charCount = formData.body.length;
   const charsRemaining = MAX_BODY_CHARS - charCount;
@@ -52,6 +48,10 @@ export function CreatePostForm({
     counterTextColor = 'text-amber-500 font-semibold';
   }
 
+  const isFormValid =
+    titleValidation.isValid && bodyValidation.isValid && tagsValidation.isValid && !isOverLimit;
+
+
   const handleBlur = (field: string) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
   };
@@ -68,15 +68,18 @@ export function CreatePostForm({
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setTouched({ title: true, body: true, tags: true });
-    setServerError(null);
+    setTouched({
+      title: true,
+      body: true,
+      tags: true,
+    });
 
-    if (!isFormValid || isOverLimit || isLoading) {
+    if (!isFormValid || isLoading) {
       return;
     }
 
     const parsedTags = formData.tags
-      .split(/[,\s]+/)
+      .split(',')
       .map((t) => t.replace(/^#/, '').trim())
       .filter((t) => t.length > 0);
 
@@ -90,11 +93,8 @@ export function CreatePostForm({
     try {
       await onSubmit(postPayload);
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setServerError(err.message);
-      } else {
-        setServerError('Failed to submit post.');
-      }
+      const msg = err instanceof Error ? err.message : 'Failed to submit post.';
+      toast.error(msg);
     }
   };
 
@@ -103,14 +103,6 @@ export function CreatePostForm({
       onSubmit={handleSubmit}
       className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-5 space-y-4 shadow-sm"
     >
-      {serverError && (
-        <Alert
-          type="error"
-          title="Error"
-          message={serverError}
-          onClose={() => setServerError(null)}
-        />
-      )}
 
       <div>
         <label

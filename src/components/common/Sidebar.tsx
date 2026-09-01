@@ -2,6 +2,7 @@ import { NavLink, Link } from 'react-router-dom';
 import { LayoutDashboard, Bookmark } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppSelector } from '../../store/hooks';
+import { selectSavedPosts } from '../../store/slices/savedPostsSlice';
 import { Avatar } from './Avatar';
 
 interface SidebarProps {
@@ -11,7 +12,8 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user } = useAuth();
-  const savedPosts = useAppSelector((state) => state.savedPosts.savedPosts);
+  const savedPosts = useAppSelector(selectSavedPosts);
+
 
   const navItems = [
     {

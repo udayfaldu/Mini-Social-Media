@@ -5,7 +5,8 @@ interface SavedPostsState {
   savedPosts: Post[];
 }
 
-const STORAGE_KEY = 'miniconnect_saved_posts';
+const STORAGE_KEY = 'saved_posts';
+
 
 const loadSavedPosts = (): Post[] => {
   try {
@@ -20,7 +21,6 @@ const persistSavedPosts = (posts: Post[]) => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
   } catch {
-    // ignore
   }
 };
 
@@ -65,4 +65,10 @@ export const {
   clearAllSavedPosts,
 } = savedPostsSlice.actions;
 
+export const selectSavedPosts = (state: { savedPosts: SavedPostsState }) =>
+  state.savedPosts.savedPosts;
+export const selectIsPostSaved = (postId: number) => (state: { savedPosts: SavedPostsState }) =>
+  state.savedPosts.savedPosts.some((p) => p.id === postId);
+
 export default savedPostsSlice.reducer;
+

@@ -1,17 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { postService } from '../services/postService';
 import { useAuth } from '../hooks/useAuth';
 import type { CreatePostInput } from '../types';
 import { CreatePostForm } from '../components/posts/CreatePostForm';
-import { Alert } from '../components/common/Alert';
 
 export function CreatePostPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const currentUserId = user?.id || 1;
 
@@ -19,10 +18,10 @@ export function CreatePostPage() {
     setIsLoading(true);
     try {
       const newPost = await postService.createPost(postData);
-      setSuccessMessage(`Post "${newPost.title}" published.`);
-      setTimeout(() => {
-        navigate('/', { replace: true });
-      }, 1000);
+      toast.success(`Post "${newPost.title}" published!`);
+      navigate('/', { replace: true });
+    } catch {
+      toast.error('Failed to create post. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -48,13 +47,6 @@ export function CreatePostPage() {
         </p>
       </div>
 
-      {successMessage && (
-        <Alert
-          type="success"
-          message={successMessage}
-        />
-      )}
-
       <CreatePostForm
         onSubmit={handleCreatePost}
         userId={currentUserId}
@@ -63,3 +55,4 @@ export function CreatePostPage() {
     </div>
   );
 }
+
